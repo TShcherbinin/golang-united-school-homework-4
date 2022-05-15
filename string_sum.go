@@ -2,6 +2,9 @@ package string_sum
 
 import (
 	"errors"
+	"fmt"
+	"strconv"
+	"strings"
 )
 
 //use these errors as appropriate, wrapping them with fmt.Errorf function
@@ -22,6 +25,58 @@ var (
 //
 // Use the errors defined above as described, again wrapping into fmt.Errorf
 
+func parseNumber(input string, lastDelimiter byte) (output int, err error) {
+	num, err := strconv.Atoi(strings.TrimSpace(input))
+	if err != nil {
+		return 0, err
+	}
+	if lastDelimiter == '-' {
+		num = -num
+	}
+	return num, nil
+}
+
 func StringSum(input string) (output string, err error) {
-	return "", nil
+	if len(input) == 0 {
+		return "", fmt.Errorf("%w", errorEmptyInput)
+	}
+	var result int = 0
+
+	trimmedInput := strings.TrimSpace(input)
+	// try find equation delimeter
+	countDelimeters := 0
+	idxFound := 0
+	var lastDelimiter byte = '+'
+	for i, il := 0, len(trimmedInput); i < il; i++ {
+		if trimmedInput[i] == '+' || trimmedInput[i] == '-' {
+			if i != 0 {
+				tmp := trimmedInput[idxFound:i]
+				num, err := parseNumber(strings.TrimSpace(tmp), lastDelimiter)
+				if err != nil {
+					return "", fmt.Errorf("Invalid number: %w", err)
+				}
+				result += num
+				countDelimeters++
+			}
+
+			lastDelimiter = trimmedInput[i]
+			idxFound = i + 1
+		}
+	}
+
+	if idxFound != len(trimmedInput) {
+		tmp := trimmedInput[idxFound:]
+		num, err := parseNumber(strings.TrimSpace(tmp), lastDelimiter)
+		if err != nil {
+			return "", fmt.Errorf("%w", err)
+		}
+		result += num
+		countDelimeters++
+	}
+
+	if countDelimeters != 2 {
+		return "", fmt.Errorf("%w", errorNotTwoOperands)
+	}
+
+	return strconv.Itoa(result), nil
 }
